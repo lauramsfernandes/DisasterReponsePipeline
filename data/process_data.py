@@ -6,7 +6,7 @@ from sqlalchemy import create_engine
 
 # Summary: read the dataset, clean the data, and then store it in a SQLite database
 
-## E - Extracting data
+# E - Extracting data
 
 # Load messages dataset
 messages = pd.read_csv(r'data\messages.csv')
@@ -14,13 +14,16 @@ messages = pd.read_csv(r'data\messages.csv')
 # Load categories dataset
 categories = pd.read_csv(r'data\categories.csv')
 
-## T - Transforming data
+# T - Transforming data
+
+# Drop original and genre columns from `messages` dataframe
+messages.drop(['original', 'genre'], axis=1, inplace=True)
 
 # Merge messages and categories dataset into a new dataframe
 df = pd.merge(categories, messages)
 
 # Split `categories` into separate category columns
-categories = categories.loc[:,'categories'].str.split(pat=';', expand=True)
+categories = categories.loc[:, 'categories'].str.split(pat=';', expand=True)
 
 # Select the first row of the categories dataframe in order to set the columns name
 row = categories.iloc[0].values
@@ -40,12 +43,14 @@ for column in categories:
 
 # Replace `categories` column in df with new category columns
 df.drop('categories', axis=1, inplace=True)
-df = pd.concat([df,categories], axis=1)
+df = pd.concat([df, categories], axis=1)
 
-#Remove duplicates
+# Remove duplicates
 df.drop_duplicates(inplace=True)
 
-# L - Loading data
-engine = create_engine('sqlite:///InsertDatabaseName.db')
-df.to_sql('InsertTableName', engine, index=False)
+# Remove NaN
+df.dropna(inplace=True)
 
+# L - Loading data
+engine = create_engine('sqlite:///disaster_messages.db')
+df.to_sql('messages', engine, index=False)
