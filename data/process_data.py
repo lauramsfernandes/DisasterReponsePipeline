@@ -53,4 +53,4 @@ df.dropna(inplace=True)
 
 # L - Loading data
 engine = create_engine('sqlite:///disaster_messages.db')
-df.to_sql('messages', engine, index=False)
+df.to_sql('message', engine, index=False)
