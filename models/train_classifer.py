@@ -48,8 +48,47 @@ def tokenize(text):
         clean_tokens.append(clean_tok)
 
     return clean_tokens
-# Split the data into train and test set
 
+# Classification Report Function
+def df_classification_report(y_pred, y_true):
+    """Runs trought each column from y_true series sklearn's classification_report and returns
+    a new MultiIndex DataFrame cointaining the values.
+
+    Args:
+        y_pred ([float]): predicted values list.
+        y_true ([float]): true value series.
+
+    Returns:
+        [pd.DataFrame]: Classification Report with all values from each column.
+    """
+
+    first = y_true.columns.values.tolist()
+    second = ['0.0','1.0','avg/total']
+
+    cols = ['precision','recall','f1_score', 'support']
+
+    mult_ind = [first,second]
+    mult_ind = pd.MultiIndex.from_product(mult_col, names=['first', 'second'])
+
+    # Dict data
+    d = {}
+
+    # Iterates classification_report through each column
+    for i in np.arange(0,36,1):
+        if mult_ind[i][1] == '0.0':
+            res = classification_report(y_true.iloc[i].tolist(), y_pred[i].tolist()).split()[5:9]
+        elif mult_ind[i][1] == '1.0':
+            res = classification_report(y_true.iloc[i].tolist(), y_pred[i].tolist()).split()[10:14]
+        elif mult_ind[i][1] == 'avg/total':
+            res = classification_report(y_true.iloc[i].tolist(), y_pred[i].tolist()).split()[-4:]
+
+        # Update the dict data
+        d[mult_ind[i]] = res
+    # Creates the DataFrame
+    df_metric = pd.DataFrame(data=d, index=ind)
+    df_metric = df_metric.T
+
+    return df_metric
 
 # Create a ML pipeline with NLTK, scikit-learn's Pipeline and GridSearchCV
 # OUTPUT: a final model that uses 'message' column to predict classifications for 36 categories (multi-output classification)
