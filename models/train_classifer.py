@@ -50,42 +50,61 @@ def tokenize(text):
     return clean_tokens
 
 # Classification Report Function
-def df_classification_report(y_pred, y_true):
-    """Runs trought each column from y_true series sklearn's classification_report and returns
-    a new MultiIndex DataFrame cointaining the values.
+def df_classification_report(y_true,y_pred):
+    """[summary]
 
     Args:
-        y_pred ([float]): predicted values list.
-        y_true ([float]): true value series.
+        y_true ([float]): float list of all true results
+        y_pred ([float]): float list of all predictions
 
     Returns:
-        [pd.DataFrame]: Classification Report with all values from each column.
+        [type]: a MultiIndex DataFrame cointaining all results of classification_report function from sklearn.
+        The classification_report function builds a text report showing the precision, recall, f1_score and support.
     """
 
+    # Set levels of MultiIndex DataFrame
     first = y_true.columns.values.tolist()
     second = ['0.0','1.0','avg/total']
 
+    # Set column names
     cols = ['precision','recall','f1_score', 'support']
 
+    # Set MultiIndex
     mult_ind = [first,second]
-    mult_ind = pd.MultiIndex.from_product(mult_col, names=['first', 'second'])
+    mult_ind = pd.MultiIndex.from_product(mult_ind, names=['first', 'second'])
 
-    # Dict data
+    # Create a dict to be used as data
     d = {}
 
-    # Iterates classification_report through each column
+    ## Iterates classification_report through each column and updates the dict data
+    j=0
     for i in np.arange(0,36,1):
-        if mult_ind[i][1] == '0.0':
-            res = classification_report(y_true.iloc[i].tolist(), y_pred[i].tolist()).split()[5:9]
-        elif mult_ind[i][1] == '1.0':
-            res = classification_report(y_true.iloc[i].tolist(), y_pred[i].tolist()).split()[10:14]
-        elif mult_ind[i][1] == 'avg/total':
-            res = classification_report(y_true.iloc[i].tolist(), y_pred[i].tolist()).split()[-4:]
-
-        # Update the dict data
-        d[mult_ind[i]] = res
+        lenght = len(classification_report(y_true.iloc[i].tolist(), y_pred[i].tolist()))
+        if lenght == 214:
+            d[mult_ind[j]] = classification_report(y_true.iloc[i].tolist(), y_pred[i].tolist()).split()[5:9]
+            j+=1
+            d[mult_ind[j]] = classification_report(y_true.iloc[i].tolist(), y_pred[i].tolist()).split()[10:14]
+            j+=1
+            d[mult_ind[j]] = classification_report(y_true.iloc[i].tolist(), y_pred[i].tolist()).split()[-4:]
+            j+=1
+        elif lenght == 161:
+            true_or_false = classification_report(y_true.iloc[i].tolist(), y_pred[i].tolist()).split()[4]
+            if true_or_false == '0.0':
+                d[mult_ind[j]] = classification_report(y_true.iloc[i].tolist(), y_pred[i].tolist()).split()[5:9]
+                j+=1
+                d[mult_ind[j]] = [np.nan, np.nan, np.nan, np.nan]
+                j+=1
+                d[mult_ind[j]] = classification_report(y_true.iloc[i].tolist(), y_pred[i].tolist()).split()[-4:]
+                j+=1
+            if true_or_false == '1.0':
+                d[mult_ind[j]] = [np.nan, np.nan, np.nan, np.nan]
+                j+=1
+                d[mult_ind[j]] = classification_report(y_true.iloc[i].tolist(), y_pred[i].tolist()).split()[5:9]
+                j+=1
+                d[mult_ind[j]] = classification_report(y_true.iloc[i].tolist(), y_pred[i].tolist()).split()[-4:]
+                j+=1
     # Creates the DataFrame
-    df_metric = pd.DataFrame(data=d, index=ind)
+    df_metric = pd.DataFrame(data=d, index=cols)
     df_metric = df_metric.T
 
     return df_metric
